@@ -1,16 +1,63 @@
-# React + Vite
+# Coffee R Us Store Admin
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A responsive React single-page application for maintaining a small coffee catalog. It uses React Router for page navigation, React context and a custom hook for shared product state, and JSON Server as a simulated API. The colors are inspired by the South Sudan national flag.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 20.19+ or 22.12+
+- npm
 
-## React Compiler
+## Run locally
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Install dependencies. Then start the API and frontend in separate terminals:
 
-## Expanding the Oxlint configuration
+```sh
+npm install
+npm run server
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+The frontend is served at `http://localhost:5173` and the API at `http://localhost:3001`. JSON Server saves product changes in `db.json`. To use another API address, set `VITE_API_URL` before starting Vite.
+
+## Routes
+
+- `/` - Store overview and inventory summary
+- `/products` - Searchable product catalog
+- `/products/new` - Create a product
+- `/products/:id` - Product details and delete action
+- `/products/:id/edit` - Edit product information
+
+## Data and state
+
+`ProductProvider` owns the shared `products`, `loading`, and `error` state. It loads the catalog with `GET` and updates the shared list after successful `POST`, `PATCH`, and `DELETE` requests. The `useProducts` custom hook reads this context, so pages do not need to pass the catalog through several levels of components.
+
+There is also local state for the catalog search text and product form values, saving status, and form errors. `useId` gives form controls unique IDs, and `useRef` focuses the product name field when the form opens.
+
+## Tests and checks
+
+```sh
+npm run test:run
+npm run lint
+npm run build
+```
+
+The Vitest and React Testing Library suite checks the dashboard, navigation, product search and details, product creation, product updates, confirmed deletion, unknown routes, and API error messages.
+
+## Component structure
+
+```text
+main.jsx
+└── BrowserRouter
+    └── ProductProvider
+        └── App / Layout
+            ├── DashboardPage
+            │   └── ProductRow
+            ├── ProductsPage
+            │   └── ProductRow
+            ├── ProductFormPage
+            │   └── ProductForm
+            └── ProductDetailsPage
+                └── Delete confirmation dialog
+```
+
+`ProductProvider` is the parent for the routed pages and shares product data and CRUD functions through context. `DashboardPage`, `ProductsPage`, `ProductFormPage`, and `ProductDetailsPage` read that shared state with `useProducts`. `ProductsPage` gives each `ProductRow` a `product` prop. `ProductFormPage` gives `ProductForm` the current `product` (when editing), an `onSave` function, and an `onCancel` function. `ProductForm` keeps its input values locally and calls `onSave` when submitted.
